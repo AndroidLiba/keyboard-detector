@@ -9,7 +9,9 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 
+import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import ru.jahom.keyboarddetection.detector.GlobalLayoutKeyboardDetector;
 
@@ -19,28 +21,20 @@ import ru.jahom.keyboarddetection.detector.GlobalLayoutKeyboardDetector;
 
 public class SoftKeyboard  {
 
-  private static SoftKeyboard sInstance;
+  private @Nullable Detector mDetector;
+  private @Nullable InputMethodManager mInputMethodManager;
+  private @Nullable Listener mListener;
+  private @Nullable Activity mActivity;
 
-  private final Set<Listener> mListeners = new ArraySet<>();
-  private Activity mActivity;
-  private View mContentView;
-  private InputMethodManager mInputMethodManager;
-
-  private Detector mDetector;
-
-  public static SoftKeyboard getInstance() {
-    if (sInstance == null) {
-      sInstance = new SoftKeyboard();
-    }
-    return sInstance;
+  public SoftKeyboard() {
   }
 
   public void start(Activity activity) {
     mActivity = activity;
     mInputMethodManager = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-    mContentView = activity.findViewById(Window.ID_ANDROID_CONTENT);
+    View contentView = activity.findViewById(Window.ID_ANDROID_CONTENT);
 
-    mDetector = new GlobalLayoutKeyboardDetector(activity, mContentView);
+    mDetector = new GlobalLayoutKeyboardDetector(contentView);
     mDetector.setListener(new Listener() {
       @Override
       public void onKeyboardChange(boolean visible) {
@@ -52,35 +46,37 @@ public class SoftKeyboard  {
 
   public void stop() {
     mActivity = null;
-    mContentView = null;
     mInputMethodManager = null;
-    mDetector.stop();
-    mDetector = null;
+    if (mDetector != null) {
+      mDetector.stop();
+      mDetector = null;
+    }
   }
 
   public void show() {
-    if (mActivity.hasWindowFocus()) {
-      mInputMethodManager.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
-    } else {
-      mActivity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+    if (mActivity != null && mInputMethodManager != null) {
+      if (mInputMethodManager.isActive()) {
+        mInputMethodManager.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0);
+      } else {
+        mActivity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+      }
     }
   }
 
   public void hide(){
-    mInputMethodManager.toggleSoftInput(0, InputMethodManager.HIDE_IMPLICIT_ONLY);
+    if (mInputMethodManager != null) {
+      mInputMethodManager.toggleSoftInput(0, InputMethodManager.HIDE_IMPLICIT_ONLY);
+    }
   }
 
-  public void registerListener(Listener listener) {
-    mListeners.add(listener);
+  public void setListener(@Nullable Listener listener) {
+    mListener = listener;
   }
 
-  public void unregisterListener(Listener listener) {
-    mListeners.remove(listener);
-  }
 
   private void runKeyboardChangeListener(boolean visible) {
-    for (Listener listener : mListeners) {
-      listener.onKeyboardChange(visible);
+    if (mListener != null) {
+      mListener.onKeyboardChange(visible);
     }
   }
 

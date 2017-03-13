@@ -16,7 +16,8 @@ public class MainActivity extends AppCompatActivity implements SoftKeyboard.List
     setContentView(R.layout.activity_main);
     mSoftKeyboard = new SoftKeyboard();
     mSoftKeyboard.start(this);
-    mSoftKeyboard.registerListener(this);
+    mSoftKeyboard.setListener(this);
+    mSoftKeyboard.show();
   }
 
   @Override

@@ -12,7 +12,6 @@ import android.view.ViewTreeObserver;
 
 public class GlobalLayoutKeyboardDetector extends BaseDetector implements ViewTreeObserver.OnGlobalLayoutListener {
 
-  private Activity mActivity;
   private View mContentView;
   private int mInitialValue;
   private boolean mHasSentInitialAction;
@@ -20,8 +19,7 @@ public class GlobalLayoutKeyboardDetector extends BaseDetector implements ViewTr
 
   private Rect mRect = new Rect();
 
-  public GlobalLayoutKeyboardDetector(Activity activity, View contentView) {
-    mActivity = activity;
+  public GlobalLayoutKeyboardDetector(View contentView) {
     mContentView = contentView;
   }
 
